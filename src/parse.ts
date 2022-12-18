@@ -38,7 +38,7 @@ export async function parseModels(
   const schemas = {};
 
   if (!_.isArrayLike(models)) {
-    throw new Error("Empty models");
+    models = [];
   }
 
   for (const model of models) {

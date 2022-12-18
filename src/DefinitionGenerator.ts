@@ -151,9 +151,14 @@ export class DefinitionGenerator {
       operationObj.deprecated = true;
     }
 
-    if (documentationConfig.requestBody) {
+    const camelCaseFunctionName = funcName.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
+      return index === 0 ? word.toLowerCase() : word.toUpperCase();
+    }).replace(/[\s_-]+/g, "");
+
+    if (documentationConfig.requestBody || documentationConfig.request) {
       operationObj.requestBody = this.getRequestBodiesFromConfig(
-        documentationConfig
+        documentationConfig,
+        camelCaseFunctionName
       );
     }
 
@@ -242,9 +247,20 @@ export class DefinitionGenerator {
   /**
    * Derives request body schemas from event documentation configuration
    * @param documentationConfig
+   * @param camelCaseFunctionName
    */
-  private getRequestBodiesFromConfig(documentationConfig) {
+  private getRequestBodiesFromConfig(documentationConfig, camelCaseFunctionName) {
     const requestBodies = {};
+
+    if (documentationConfig.request?.schema && !documentationConfig.requestModels) {
+      const requestSchemaName = `${camelCaseFunctionName}Request`;
+      documentationConfig.requestModels = {
+        "application/json": {
+          name: requestSchemaName,
+          schema: documentationConfig.request.schema
+        }
+      };
+    }
 
     if (!documentationConfig.requestModels) {
       throw new Error(
@@ -262,25 +278,31 @@ export class DefinitionGenerator {
       for (const requestModelType of Object.keys(
         documentationConfig.requestModels
       )) {
-        // get schema reference information
-        const requestModel = this.config.models
-          .filter(
-            model =>
-              model.name === documentationConfig.requestModels[requestModelType]
-          )
-          .pop();
+        const value = documentationConfig.requestModels[requestModelType];
+        let reqModelConfig;
+        if (typeof value === "string") {
+          // get schema reference information
+          const requestModel = this.config.models
+            .filter(
+              model =>
+                model.name === value
+            )
+            .pop();
 
-        if (requestModel) {
-          const reqModelConfig = {
-            schema: {
-              $ref: `#/components/schemas/${
-                documentationConfig.requestModels[requestModelType]
-              }`
-            }
-          };
-
-          this.attachExamples(requestModel, reqModelConfig);
-
+          if (requestModel) {
+            reqModelConfig = {
+              schema: {
+                $ref: `#/components/schemas/${
+                  value
+                }`
+              }
+            };
+            this.attachExamples(requestModel, reqModelConfig);
+          }
+        } else if (value.schema) {
+          reqModelConfig = value;
+        }
+        if (reqModelConfig) {
           const reqBodyConfig: { content: object; description?: string } = {
             content: {
               [requestModelType]: reqModelConfig
