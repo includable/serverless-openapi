@@ -30,7 +30,6 @@ export default {
             },
             url: {
               type: "string",
-              format: "uri",
             },
           },
         },
@@ -67,7 +66,6 @@ export default {
         parameters: {
           type: "array",
           description: "The parameters needed to send a valid API call.",
-          additionalItems: false,
           items: {
             oneOf: [
               {
