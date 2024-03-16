@@ -89,8 +89,14 @@ export class ServerlessOpenApiDocumentation {
     };
 
     // Extend the configuration schema for the serverless.yml file
-    serverless.configSchemaHandler.defineFunctionProperties(
-      "openapi",
+    serverless.configSchemaHandler.defineFunctionEventProperties(
+      "aws",
+      "http",
+      functionPropertiesSchema,
+    );
+    serverless.configSchemaHandler.defineFunctionEventProperties(
+      "aws",
+      "httpApi",
       functionPropertiesSchema,
     );
   }
