@@ -9,7 +9,7 @@ import {
   DefinitionConfig,
   Operation,
   ParameterConfig,
-  ServerlessFunctionConfig
+  ServerlessFunctionConfig,
 } from "./types";
 import { cleanSchema } from "./utils";
 
@@ -20,7 +20,7 @@ export class DefinitionGenerator {
   // Base configuration object
   public definition: Definition = {
     openapi: this.version,
-    components: {}
+    components: {},
   };
 
   public config: DefinitionConfig;
@@ -43,7 +43,7 @@ export class DefinitionGenerator {
       models,
       security,
       securitySchemes,
-      servers
+      servers,
     } = this.config;
 
     _.merge(this.definition, {
@@ -51,8 +51,8 @@ export class DefinitionGenerator {
       info: { title, description, version },
       paths: {},
       components: {
-        schemas: {}
-      }
+        schemas: {},
+      },
     });
 
     if (security) {
@@ -106,11 +106,12 @@ export class DefinitionGenerator {
           // Build OpenAPI path configuration structure for each method
           const pathConfig = {
             [`/${normalizedPath}`]: {
-              [httpEventConfig.method.toLowerCase()]: this.getOperationFromConfig(
-                funcConfig._functionName,
-                httpEventConfig.documentation
-              )
-            }
+              [httpEventConfig.method.toLowerCase()]:
+                this.getOperationFromConfig(
+                  funcConfig._functionName,
+                  httpEventConfig.documentation,
+                ),
+            },
           };
 
           // merge path configuration into main configuration
@@ -129,10 +130,10 @@ export class DefinitionGenerator {
    */
   private getOperationFromConfig(
     funcName: string,
-    documentationConfig
+    documentationConfig,
   ): Operation {
     const operationObj: Operation = {
-      operationId: funcName
+      operationId: funcName,
     };
 
     if (documentationConfig.summary) {
@@ -151,14 +152,16 @@ export class DefinitionGenerator {
       operationObj.deprecated = true;
     }
 
-    const camelCaseFunctionName = funcName.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
-      return index === 0 ? word.toLowerCase() : word.toUpperCase();
-    }).replace(/[\s_-]+/g, "");
+    const camelCaseFunctionName = funcName
+      .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
+        return index === 0 ? word.toLowerCase() : word.toUpperCase();
+      })
+      .replace(/[\s_-]+/g, "");
 
     if (documentationConfig.requestBody || documentationConfig.request) {
       operationObj.requestBody = this.getRequestBodiesFromConfig(
         documentationConfig,
-        camelCaseFunctionName
+        camelCaseFunctionName,
       );
     }
 
@@ -197,7 +200,7 @@ export class DefinitionGenerator {
           name: parameter.name,
           in: type,
           description: parameter.description || "",
-          required: parameter.required || false // Note: all path parameters must be required
+          required: parameter.required || false, // Note: all path parameters must be required
         };
 
         // if type is path, then required must be true (@see OpenAPI 3.0-RC1)
@@ -249,16 +252,22 @@ export class DefinitionGenerator {
    * @param documentationConfig
    * @param camelCaseFunctionName
    */
-  private getRequestBodiesFromConfig(documentationConfig, camelCaseFunctionName) {
+  private getRequestBodiesFromConfig(
+    documentationConfig,
+    camelCaseFunctionName,
+  ) {
     const requestBodies = {};
 
-    if (documentationConfig.request?.schema && !documentationConfig.requestModels) {
+    if (
+      documentationConfig.request?.schema &&
+      !documentationConfig.requestModels
+    ) {
       const requestSchemaName = `${camelCaseFunctionName}Request`;
       documentationConfig.requestModels = {
         "application/json": {
           name: requestSchemaName,
-          schema: documentationConfig.request.schema
-        }
+          schema: documentationConfig.request.schema,
+        },
       };
     }
 
@@ -267,8 +276,8 @@ export class DefinitionGenerator {
         `Required requestModels in: ${JSON.stringify(
           documentationConfig,
           null,
-          2
-        )}`
+          2,
+        )}`,
       );
     }
 
@@ -276,26 +285,21 @@ export class DefinitionGenerator {
     if (documentationConfig.requestModels) {
       // For each request model type (Sorted by "Content-Type")
       for (const requestModelType of Object.keys(
-        documentationConfig.requestModels
+        documentationConfig.requestModels,
       )) {
         const value = documentationConfig.requestModels[requestModelType];
         let reqModelConfig;
         if (typeof value === "string") {
           // get schema reference information
           const requestModel = this.config.models
-            .filter(
-              model =>
-                model.name === value
-            )
+            .filter((model) => model.name === value)
             .pop();
 
           if (requestModel) {
             reqModelConfig = {
               schema: {
-                $ref: `#/components/schemas/${
-                  value
-                }`
-              }
+                $ref: `#/components/schemas/${value}`,
+              },
             };
             this.attachExamples(requestModel, reqModelConfig);
           }
@@ -305,8 +309,8 @@ export class DefinitionGenerator {
         if (reqModelConfig) {
           const reqBodyConfig: { content: object; description?: string } = {
             content: {
-              [requestModelType]: reqModelConfig
-            }
+              [requestModelType]: reqModelConfig,
+            },
           };
 
           if (
@@ -350,25 +354,25 @@ export class DefinitionGenerator {
             response.responseBody && "description" in response.responseBody
               ? response.responseBody.description
               : `Status ${response.statusCode} Response`,
-          content: this.getResponseContent(response.responseModels)
+          content: this.getResponseContent(response.responseModels),
         };
 
         if (response.responseHeaders) {
           methodResponseConfig.headers = {};
           for (const header of response.responseHeaders) {
             methodResponseConfig.headers[header.name] = {
-              description: header.description || `${header.name} header`
+              description: header.description || `${header.name} header`,
             };
             if (header.schema) {
               methodResponseConfig.headers[header.name].schema = cleanSchema(
-                header.schema
+                header.schema,
               );
             }
           }
         }
 
         _.merge(responses, {
-          [response.statusCode]: methodResponseConfig
+          [response.statusCode]: methodResponseConfig,
         });
       }
     }
@@ -381,14 +385,14 @@ export class DefinitionGenerator {
 
     for (const responseKey of Object.keys(response)) {
       const responseModel = this.config.models.find(
-        model => model.name === response[responseKey]
+        (model) => model.name === response[responseKey],
       );
 
       if (responseModel) {
         const resModelConfig = {
           schema: {
-            $ref: `#/components/schemas/${response[responseKey]}`
-          }
+            $ref: `#/components/schemas/${response[responseKey]}`,
+          },
         };
 
         this.attachExamples(responseModel, resModelConfig);
@@ -401,8 +405,8 @@ export class DefinitionGenerator {
   }
 
   private getHttpEvents(funcConfig) {
-    return funcConfig.filter(event =>
-      event.http || event.httpApi ? true : false
+    return funcConfig.filter((event) =>
+      event.http || event.httpApi ? true : false,
     );
   }
 }

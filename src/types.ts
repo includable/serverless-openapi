@@ -22,7 +22,7 @@ export interface DefinitionConfig {
 
 export enum Format {
   yaml = "yaml",
-  json = "json"
+  json = "json",
 }
 
 export interface DefinitionType {

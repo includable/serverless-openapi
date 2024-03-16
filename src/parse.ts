@@ -16,7 +16,7 @@ function updateReferences(schema: JSONSchema7): JSONSchema7 {
   if (cloned.$ref) {
     return {
       ...cloned,
-      $ref: cloned.$ref.replace("#/definitions", "#/components/schemas")
+      $ref: cloned.$ref.replace("#/definitions", "#/components/schemas"),
     };
   }
 
@@ -31,10 +31,7 @@ function updateReferences(schema: JSONSchema7): JSONSchema7 {
   return cloned;
 }
 
-export async function parseModels(
-  models: Array<Model>,
-  root: string
-): Promise<{}> {
+export async function parseModels(models: Array<Model>, root: string): Promise<{}> {
   const schemas = {};
 
   if (!_.isArrayLike(models)) {
@@ -46,12 +43,14 @@ export async function parseModels(
       continue;
     }
 
-    const schema = (typeof model.schema === "string"
-      ? await $RefParser.bundle(path.resolve(root, model.schema))
-      : model.schema) as JSONSchema7;
+    const schema = (
+      typeof model.schema === "string"
+        ? await $RefParser.bundle(path.resolve(root, model.schema))
+        : model.schema
+    ) as JSONSchema7;
 
     _.assign(schemas, updateReferences(schema.definitions), {
-      [model.name]: updateReferences(cleanSchema(schema))
+      [model.name]: updateReferences(cleanSchema(schema)),
     });
   }
 
