@@ -1,6 +1,6 @@
 {
   "name": "@includable/serverless-openapi",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Serverless plugin to generate OpenAPI V3 documentation from serverless configuration",
   "main": "build/index.js",
   "author": "Includable <info@includable.com>",
