@@ -158,11 +158,13 @@ export class DefinitionGenerator {
       })
       .replace(/[\s_-]+/g, "");
 
-    if (documentationConfig.requestBody || documentationConfig.request) {
+    if (documentationConfig.request) {
       operationObj.requestBody = this.getRequestBodiesFromConfig(
         documentationConfig,
         camelCaseFunctionName,
       );
+    } else if (documentationConfig.requestBody) {
+      operationObj.requestBody = documentationConfig.requestBody;
     }
 
     operationObj.parameters = this.getParametersFromConfig(documentationConfig);
