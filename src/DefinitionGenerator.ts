@@ -158,13 +158,13 @@ export class DefinitionGenerator {
       })
       .replace(/[\s_-]+/g, "");
 
-    if (documentationConfig.request) {
+    if (documentationConfig.requestBody) {
+      operationObj.requestBody = documentationConfig.requestBody;
+    } else if (documentationConfig.request) {
       operationObj.requestBody = this.getRequestBodiesFromConfig(
         documentationConfig,
         camelCaseFunctionName,
       );
-    } else if (documentationConfig.requestBody) {
-      operationObj.requestBody = documentationConfig.requestBody;
     }
 
     operationObj.parameters = this.getParametersFromConfig(documentationConfig);
@@ -274,13 +274,7 @@ export class DefinitionGenerator {
     }
 
     if (!documentationConfig.requestModels) {
-      throw new Error(
-        `Required requestModels in: ${JSON.stringify(
-          documentationConfig,
-          null,
-          2,
-        )}`,
-      );
+      return requestBodies;
     }
 
     // Does this event have a request model?
