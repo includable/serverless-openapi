@@ -173,7 +173,7 @@ export default {
           default: false,
         },
         security: {
-          type: "object",
+          type: "array",
         },
       },
     },
